@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puro Antojo — Gestión del negocio</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5B2A86">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#FFFCEE;
+  --bg-soft:#FFF6D8;
+  --card:#FFFFFF;
+  --purple:#5B2A86;
+  --purple-dark:#3B1B5A;
+  --purple-light:#8B5FBF;
+  --purple-pale:#EFE4FA;
+  --vainilla:#EFDCA9;
+  --vainilla-dark:#DEC17F;
+  --envinada:#6E2439;
+  --envinada-dark:#4E1526;
+  --ink:#2C2233;
+  --muted:#7A6E85;
+  --ok:#3E8E5A;
+  --warn:#B5542A;
+  --shadow: 0 6px 18px rgba(60,30,90,0.10);
+  --radius: 16px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:Georgia,"Iowan Old Style",serif;font-weight:700;color:var(--purple-dark);margin:0 0 8px;}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;transition:transform .08s ease, box-shadow .15s ease;}
+button:active{transform:scale(0.97);}
+input,select,textarea{font-family:inherit;border:1.5px solid #E4D9BE;border-radius:10px;padding:9px 11px;background:#fff;color:var(--ink);font-size:14px;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--purple-light);border-color:var(--purple-light);}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--vainilla-dark);border-radius:8px;}
+
+/* ---------- Login ---------- */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:
+  radial-gradient(circle at 15% 20%, var(--vainilla) 0%, transparent 45%),
+  radial-gradient(circle at 85% 80%, var(--envinada) 0%, transparent 40%),
+  var(--bg);padding:20px;}
+.login-card{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:36px 32px;width:100%;max-width:380px;position:relative;overflow:hidden;}
+.login-card:before{content:"";position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,var(--vainilla),var(--purple),var(--envinada));}
+.brand{text-align:center;margin-bottom:22px;}
+.brand .logo{font-size:42px;line-height:1;}
+.brand h1{font-size:22px;margin-top:8px;}
+.brand p{color:var(--muted);font-size:13px;margin:2px 0 0;}
+.field{margin-bottom:14px;display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12.5px;color:var(--muted);font-weight:600;}
+.field input{width:100%;}
+.btn-primary{background:var(--purple);color:#fff;padding:11px;font-size:15px;font-weight:600;width:100%;box-shadow:0 4px 12px rgba(91,42,134,0.3);}
+.btn-primary:hover{background:var(--purple-dark);}
+.login-error{background:#FCE6E6;color:#A33;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:12px;}
+.demo-hint{margin-top:18px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5;background:var(--bg-soft);padding:8px;border-radius:10px;}
+
+/* ---------- App shell ---------- */
+#appScreen{display:none;min-height:100vh;}
+.topbar{background:linear-gradient(120deg,var(--purple-dark),var(--purple));color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,0.15);position:sticky;top:0;z-index:20;}
+.topbar .brandmini{display:flex;align-items:center;gap:10px;font-family:Georgia,serif;font-weight:700;font-size:17px;}
+.topbar .brandmini span.logo{font-size:22px;}
+.userchip{display:flex;align-items:center;gap:10px;font-size:13px;}
+.userchip .role-badge{background:var(--envinada);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
+.logout-btn{background:rgba(255,255,255,0.15);color:#fff;padding:7px 12px;font-size:13px;font-weight:600;}
+.logout-btn:hover{background:rgba(255,255,255,0.28);}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 14px;background:var(--bg-soft);border-bottom:2px solid var(--vainilla-dark);position:sticky;top:57px;z-index:19;}
+.tab-btn{white-space:nowrap;padding:9px 15px;background:transparent;color:var(--purple-dark);font-weight:600;font-size:13.5px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.tab-btn:hover{background:var(--vainilla);}
+.tab-btn.active{background:var(--purple);color:#fff;box-shadow:0 3px 8px rgba(91,42,134,.35);}
+
+.view{display:none;padding:20px;max-width:1180px;margin:0 auto;}
+.view.active{display:block;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.section-head p.sub{color:var(--muted);font-size:13px;margin:2px 0 0;}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px;}
+.grid{display:grid;gap:14px;}
+.grid.cols-2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
+.grid.cols-3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+.grid.cols-4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+
+.btn{padding:8px 14px;font-size:13.5px;font-weight:600;border-radius:10px;}
+.btn-purple{background:var(--purple);color:#fff;}
+.btn-purple:hover{background:var(--purple-dark);}
+.btn-wine{background:var(--envinada);color:#fff;}
+.btn-wine:hover{background:var(--envinada-dark);}
+.btn-ghost{background:var(--purple-pale);color:var(--purple-dark);}
+.btn-ghost:hover{background:#E1CEF5;}
+.btn-outline{background:transparent;color:var(--envinada);border:1.5px solid var(--envinada);}
+.btn-outline:hover{background:#FBEAEE;}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;color:var(--purple-dark);font-size:12px;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:2px solid var(--vainilla-dark);}
+td{padding:9px 10px;border-bottom:1px solid #F0E8D2;vertical-align:middle;}
+tr:hover td{background:var(--bg-soft);}
+.table-wrap{overflow-x:auto;}
+
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-ok{background:#E1F2E5;color:var(--ok);}
+.badge-warn{background:#FBE7DB;color:var(--warn);}
+.badge-purple{background:var(--purple-pale);color:var(--purple-dark);}
+.badge-wine{background:#FBE1E7;color:var(--envinada);}
+
+/* mesas */
+.tables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;}
+.table-card{background:var(--card);border-radius:16px;padding:16px;text-align:center;box-shadow:var(--shadow);border:2.5px solid transparent;position:relative;}
+.table-card .plate{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 30%, var(--vainilla), var(--vainilla-dark));margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--purple-dark);font-size:16px;box-shadow:inset 0 0 0 4px #fff, 0 2px 6px rgba(0,0,0,.15);}
+.table-card.free{border-color:#CFE9D6;}
+.table-card.busy{border-color:var(--envinada);}
+.table-card .status{font-size:11px;font-weight:700;text-transform:uppercase;margin-top:2px;}
+.table-card.free .status{color:var(--ok);}
+.table-card.busy .status{color:var(--envinada);}
+.table-card .amount{font-size:13px;color:var(--muted);margin-top:2px;}
+.table-card button{width:100%;margin-top:10px;}
+
+.order-panel{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;}
+@media(max-width:820px){.order-panel{grid-template-columns:1fr;}}
+.product-pick{border:1.5px solid #EFE3C6;border-radius:12px;padding:10px 12px;margin-bottom:8px;background:var(--bg-soft);}
+.product-pick .name-row{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:14px;}
+.size-btns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+.size-btns button{background:#fff;border:1.5px solid var(--vainilla-dark);color:var(--purple-dark);padding:5px 10px;font-size:12.5px;font-weight:600;}
+.size-btns button.sel{background:var(--purple);color:#fff;border-color:var(--purple);}
+.topping-chip{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid var(--vainilla-dark);border-radius:20px;padding:4px 10px;font-size:12px;margin:3px 4px 0 0;cursor:pointer;}
+.topping-chip.sel{background:var(--purple-pale);border-color:var(--purple);color:var(--purple-dark);font-weight:700;}
+.cart-line{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px dashed #E7DCC0;font-size:13.5px;}
+.cart-line .meta{color:var(--muted);font-size:12px;}
+.cart-total{display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding-top:10px;color:var(--purple-dark);}
+
+.stat-card{background:linear-gradient(135deg,#fff,var(--bg-soft));border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);}
+.stat-card .label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+.stat-card .value{font-size:24px;font-weight:800;color:var(--purple-dark);margin-top:4px;}
+.stat-card.wine .value{color:var(--envinada);}
+
+.tag-input-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.tag-input-row .field{flex:1;min-width:120px;margin-bottom:0;}
+
+.divider-wave{height:14px;background-image:radial-gradient(circle at 10px -4px, transparent 12px, var(--bg-soft) 13px);background-size:20px 20px;background-repeat:repeat-x;margin:6px 0 14px;}
+
+.pill-list{display:flex;flex-wrap:wrap;gap:8px;}
+.pill{background:var(--purple-pale);color:var(--purple-dark);padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.pill button{background:none;color:var(--envinada);font-weight:800;padding:0 2px;font-size:14px;}
+
+.empty-state{text-align:center;padding:30px 10px;color:var(--muted);}
+.empty-state .emoji{font-size:34px;display:block;margin-bottom:6px;}
+
+.lowstock-row td{background:#FBEAE3 !important;}
+
+footer.note{font-size:11.5px;color:var(--muted);text-align:center;padding:16px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(44,34,51,0.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px;}
+.modal-box{background:#fff;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.3);padding:28px;max-width:400px;width:100%;position:relative;overflow:hidden;}
+.modal-box:before{content:"";position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,var(--vainilla),var(--purple),var(--envinada));}
+.modal-box .modal-icon{font-size:36px;text-align:center;display:block;margin-bottom:8px;}
+.modal-box p{color:var(--muted);font-size:13.5px;line-height:1.5;text-align:center;}
+
+@media(max-width:600px){
+  .topbar{padding:10px 12px;}
+  .view{padding:14px;}
+  .tabs{padding:8px 10px;top:53px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand">
+      <div class="logo">🍰🥛</div>
+      <h1>Puro Antojo</h1>
+      <p>Tortas y yogures artesanales — sistema de gestión</p>
+    </div>
+    <div id="loginError"></div>
+    <div class="field">
+      <label>Usuario</label>
+      <input id="loginUser" placeholder="admin o vendedor" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Ingresar</button>
+    <div class="demo-hint">Usuarios de prueba:<br><b>admin / admin123</b> (Administrador)<br><b>vendedor / vend123</b> (Vendedor)</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen">
+  <div class="topbar">
+    <div class="brandmini"><span class="logo">🍰</span> Puro Antojo</div>
+    <div class="userchip">
+      <span id="userName"></span>
+      <span class="role-badge" id="userRole"></span>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="tabs" id="tabsBar"></div>
+  <div id="views"></div>
+  <footer class="note">Los datos se guardan en este navegador/dispositivo. Usa "Respaldo de datos" en la pestaña Productos para exportar o pasar la información a otro equipo. Esta demo usa contraseñas simples solo para fines del ejercicio.</footer>
+  <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="importBackup(this)">
+  <div id="cashGateModal"></div>
+</div>
+
+<script>
+/* =======================================================================
+   ESTADO Y PERSISTENCIA
+   ======================================================================= */
+let CURRENT_USER = null;
+let currentTab = 'mesas';
+let activeTableId = null;
+let draftOrder = { items: [], delivery:false, notes:'' };
+let pickerSel = {}; // selección temporal en el picker de producto
+
+const DEFAULTS = {
+  users: [
+    {username:'admin', password:'admin123', role:'admin', name:'Administrador'},
+    {username:'vendedor', password:'vend123', role:'vendedor', name:'Vendedor(a)'}
+  ],
+  catalog: {
+    products: [
+      {id:'torta_vainilla', name:'Torta de vainilla', category:'Tortas', hasSize:false, price:11000},
+      {id:'torta_envinada', name:'Torta envinada', category:'Tortas', hasSize:false, price:14000},
+      {id:'yogur_dulce', name:'Yogur dulce', category:'Yogures', hasSize:true, prices:{'16 oz':15000,'32 oz':30000}},
+      {id:'yogur_natural', name:'Yogur natural', category:'Yogures', hasSize:true, prices:{'16 oz':15000,'32 oz':30000}},
+      {id:'yogur_stevia', name:'Yogur con stevia', category:'Yogures', hasSize:true, prices:{'16 oz':15000,'32 oz':30000}}
+    ],
+    toppings: [
+      {id:'cereal', name:'Cereal', price:2000},
+      {id:'chococrispies', name:'Chococrispies', price:2000},
+      {id:'granola', name:'Granola', price:2000},
+      {id:'fresa', name:'Fresas picadas', price:2000},
+      {id:'kiwi', name:'Kiwi', price:2000},
+      {id:'chips', name:'Chips de chocolate', price:2000}
+    ],
+    paymentMethods: ['Efectivo','Tarjeta','Transferencia'],
+    deliveryFee: 2000
+  },
+  inventory: {
+    finishedStock: {
+      torta_vainilla: 10, torta_envinada: 10,
+      yogur_dulce: {'16 oz':10,'32 oz':6},
+      yogur_natural: {'16 oz':10,'32 oz':6},
+      yogur_stevia: {'16 oz':10,'32 oz':6}
+    },
+    rawMaterials: [
+      {id:'rm1', name:'Leche', unit:'Litros', qty:20, minStock:5, supplierId:null},
+      {id:'rm2', name:'Base de yogur', unit:'Kg', qty:15, minStock:4, supplierId:null},
+      {id:'rm3', name:'Harina', unit:'Kg', qty:12, minStock:3, supplierId:null},
+      {id:'rm4', name:'Huevos', unit:'Unidades', qty:60, minStock:12, supplierId:null},
+      {id:'rm5', name:'Azúcar', unit:'Kg', qty:10, minStock:3, supplierId:null},
+      {id:'rm6', name:'Vino para tortas', unit:'Litros', qty:5, minStock:1, supplierId:null},
+      {id:'rm7', name:'Esencia de vainilla', unit:'ml', qty:800, minStock:150, supplierId:null},
+      {id:'rm8', name:'Stevia', unit:'gr', qty:400, minStock:80, supplierId:null}
+    ]
+  },
+  suppliers: [],
+  tables: Array.from({length:8}, (_,i)=>({id:'m'+(i+1), name:'Mesa '+(i+1), status:'libre'})),
+  ordersByTable: {}, // tableId -> {items, delivery, notes}
+  sales: [],
+  transactions: [],
+  cash: { closings: [], currentOpen: null }
+};
+
+let DB = null; // en memoria, reflejo de storage
+
+/* Persistencia real en el navegador (localStorage). Esto es lo que permite
+   que, al cerrar y volver a abrir la app (o instalarla como PWA), toda la
+   información siga ahí. Cada dispositivo/navegador guarda sus propios datos
+   — por eso más abajo se agregó un botón de exportar/importar respaldo. */
+async function storageGet(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){
+    return fallback;
+  }
+}
+async function storageSet(key, value){
+  try{
+    localStorage.setItem(key, JSON.stringify(value));
+  }catch(e){
+    console.error('No se pudo guardar', key, e);
+    alert('No se pudo guardar la información. Es posible que el almacenamiento del navegador esté lleno o bloqueado (modo incógnito).');
+  }
+}
+
+async function loadDB(){
+  const [users, catalog, inventory, suppliers, tables, ordersByTable, sales, transactions, cash] = await Promise.all([
+    storageGet('rest_users', DEFAULTS.users),
+    storageGet('rest_catalog', DEFAULTS.catalog),
+    storageGet('rest_inventory', DEFAULTS.inventory),
+    storageGet('rest_suppliers', DEFAULTS.suppliers),
+    storageGet('rest_tables', DEFAULTS.tables),
+    storageGet('rest_orders', DEFAULTS.ordersByTable),
+    storageGet('rest_sales', DEFAULTS.sales),
+    storageGet('rest_transactions', DEFAULTS.transactions),
+    storageGet('rest_cash', DEFAULTS.cash),
+  ]);
+  DB = {users, catalog, inventory, suppliers, tables, ordersByTable, sales, transactions, cash};
+}
+
+async function saveDB(part){
+  const map = {
+    users:'rest_users', catalog:'rest_catalog', inventory:'rest_inventory',
+    suppliers:'rest_suppliers', tables:'rest_tables', ordersByTable:'rest_orders',
+    sales:'rest_sales', transactions:'rest_transactions', cash:'rest_cash'
+  };
+  if(part){ await storageSet(map[part], DB[part]); }
+  else { for(const k in map){ await storageSet(map[k], DB[k]); } }
+}
+
+/* =======================================================================
+   UTILIDADES
+   ======================================================================= */
+function money(n){ return '$' + Math.round(n).toLocaleString('es-CO'); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function monthStr(d){ return d.slice(0,7); }
+function fmtDate(d){ const dt=new Date(d); return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDateTime(d){ const dt=new Date(d); return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'short'}) + ' ' + dt.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); }
+function uid(prefix){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*10000); }
+function isAdmin(){ return CURRENT_USER && CURRENT_USER.role === 'admin'; }
+
+function getStock(productId, size){
+  const st = DB.inventory.finishedStock[productId];
+  if(st === undefined) return 0;
+  if(typeof st === 'object') return st[size] ?? 0;
+  return st;
+}
+function setStockDelta(productId, size, delta){
+  const st = DB.inventory.finishedStock[productId];
+  if(typeof st === 'object'){
+    st[size] = (st[size]||0) + delta;
+  } else {
+    DB.inventory.finishedStock[productId] = (st||0) + delta;
+  }
+}
+
+/* =======================================================================
+   LOGIN / LOGOUT
+   ======================================================================= */
+function isCashOpenToday(){
+  return DB.cash.currentOpen && DB.cash.currentOpen.date === todayStr();
+}
+function hideCashGate(){
+  document.getElementById('cashGateModal').innerHTML = '';
+}
+function showCashGate(){
+  const modalRoot = document.getElementById('cashGateModal');
+  if(isCashOpenToday()){ modalRoot.innerHTML = ''; return; }
+  if(isAdmin()){
+    modalRoot.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal-box">
+        <span class="modal-icon">💰</span>
+        <h3 style="text-align:center;">Abrir caja de hoy</h3>
+        <p>Antes de empezar a vender, registra con cuánto efectivo arranca la caja (la base para dar cambio).</p>
+        <div class="field" style="margin:14px 0;">
+          <label>Monto inicial en caja</label>
+          <input id="openingBalanceInput" type="number" value="0" style="width:100%;font-size:16px;">
+        </div>
+        <button class="btn-primary" onclick="openCash()">Abrir caja</button>
+      </div>
+    </div>`;
+  } else {
+    modalRoot.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal-box">
+        <span class="modal-icon">🔒</span>
+        <h3 style="text-align:center;">La caja aún no ha sido abierta</h3>
+        <p>Pide a un administrador que abra la caja de hoy antes de empezar a tomar pedidos y cobrar ventas.</p>
+        <button class="btn-primary" onclick="hideCashGate()">Entendido</button>
+      </div>
+    </div>`;
+  }
+}
+function openCash(){
+  const val = parseFloat(document.getElementById('openingBalanceInput').value);
+  const openingBalance = isNaN(val) ? 0 : val;
+  DB.cash.currentOpen = { date: todayStr(), openingBalance, openedAt: new Date().toISOString(), openedBy: CURRENT_USER.name };
+  saveDB('cash');
+  hideCashGate();
+  if(currentTab==='caja') rerender();
+}
+
+
+async function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const errBox = document.getElementById('loginError');
+  errBox.innerHTML = '';
+  if(!DB){ await loadDB(); }
+  const found = DB.users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+  if(!found){
+    errBox.innerHTML = '<div class="login-error">Usuario o contraseña incorrectos.</div>';
+    return;
+  }
+  CURRENT_USER = found;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('userName').textContent = found.name;
+  document.getElementById('userRole').textContent = found.role === 'admin' ? 'Administrador' : 'Vendedor';
+  currentTab = 'mesas';
+  buildTabs();
+  renderTab();
+  showCashGate();
+}
+function doLogout(){
+  CURRENT_USER = null;
+  activeTableId = null;
+  hideCashGate();
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+/* =======================================================================
+   TABS
+   ======================================================================= */
+const TAB_DEFS = [
+  {id:'mesas', label:'Mesas', icon:'🪑', roles:['admin','vendedor']},
+  {id:'ventas', label:'Ventas', icon:'🧾', roles:['admin','vendedor']},
+  {id:'productos', label:'Productos', icon:'🍰', roles:['admin']},
+  {id:'inventario', label:'Inventario', icon:'📦', roles:['admin']},
+  {id:'proveedores', label:'Proveedores', icon:'🚚', roles:['admin']},
+  {id:'finanzas', label:'Ingresos y egresos', icon:'💵', roles:['admin']},
+  {id:'caja', label:'Cierre de caja', icon:'💰', roles:['admin']},
+  {id:'reportes', label:'Reportes', icon:'📊', roles:['admin']},
+];
+function buildTabs(){
+  const bar = document.getElementById('tabsBar');
+  bar.innerHTML = TAB_DEFS.filter(t=>t.roles.includes(CURRENT_USER.role)).map(t=>
+    `<button class="tab-btn ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')">${t.icon} ${t.label}</button>`
+  ).join('');
+}
+function switchTab(id){
+  currentTab = id;
+  buildTabs();
+  renderTab();
+}
+function renderTab(){
+  const container = document.getElementById('views');
+  let html = '';
+  switch(currentTab){
+    case 'mesas': html = viewMesas(); break;
+    case 'ventas': html = viewVentas(); break;
+    case 'productos': html = viewProductos(); break;
+    case 'inventario': html = viewInventario(); break;
+    case 'proveedores': html = viewProveedores(); break;
+    case 'finanzas': html = viewFinanzas(); break;
+    case 'caja': html = viewCaja(); break;
+    case 'reportes': html = viewReportes(); break;
+  }
+  container.innerHTML = `<div class="view active">${html}</div>`;
+}
+function rerender(){ renderTab(); }
+
+/* =======================================================================
+   VISTA: MESAS / PEDIDOS
+   ======================================================================= */
+function viewMesas(){
+  const cashBanner = !isCashOpenToday() ? `
+    <div class="card" style="background:#FBEAE3;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div><b>🔒 La caja de hoy no está abierta.</b> <span style="color:var(--muted);">No se pueden cobrar ventas hasta abrirla.</span></div>
+      <button class="btn btn-wine btn-sm" onclick="showCashGate()">${isAdmin()?'Abrir caja':'Ver aviso'}</button>
+    </div>` : '';
+  if(activeTableId){
+    return cashBanner + renderOrderPanel(activeTableId);
+  }
+  const cards = DB.tables.map(t=>{
+    const order = DB.ordersByTable[t.id];
+    const busy = order && order.items && order.items.length>0;
+    const total = busy ? orderTotal(order) : 0;
+    return `
+    <div class="table-card ${busy?'busy':'free'}">
+      <div class="plate">${t.name.replace('Mesa ','')}</div>
+      <div style="font-weight:700;font-size:13.5px;">${t.name}</div>
+      <div class="status">${busy?'Ocupada':'Libre'}</div>
+      ${busy?`<div class="amount">${money(total)}</div>`:''}
+      <button class="btn ${busy?'btn-wine':'btn-purple'} btn-sm" onclick="openTable('${t.id}')">${busy?'Ver pedido':'Tomar pedido'}</button>
+    </div>`;
+  }).join('');
+  return `
+    ${cashBanner}
+    <div class="section-head">
+      <div><h2>Mesas</h2><p class="sub">Selecciona una mesa para tomar o continuar un pedido.</p></div>
+      ${isAdmin()?`<div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="addTable()">➕ Agregar mesa</button>
+        <button class="btn btn-outline" onclick="removeLastTable()">🗑️ Quitar última</button>
+      </div>`:''}
+    </div>
+    <div class="tables-grid">${cards}</div>
+  `;
+}
+function addTable(){
+  const n = DB.tables.length + 1;
+  DB.tables.push({id:'m'+Date.now(), name:'Mesa '+n, status:'libre'});
+  saveDB('tables'); rerender();
+}
+function removeLastTable(){
+  if(DB.tables.length===0) return;
+  const last = DB.tables[DB.tables.length-1];
+  if(DB.ordersByTable[last.id] && DB.ordersByTable[last.id].items && DB.ordersByTable[last.id].items.length){
+    alert('Esa mesa tiene un pedido activo. Cóbralo o vacíalo antes de eliminarla.'); return;
+  }
+  DB.tables.pop();
+  saveDB('tables'); rerender();
+}
+function openTable(id){
+  activeTableId = id;
+  if(!DB.ordersByTable[id]) DB.ordersByTable[id] = {items:[], delivery:false, notes:''};
+  rerender();
+}
+function closeTablePanel(){ activeTableId = null; pickerSel = {}; rerender(); }
+
+function orderTotal(order){
+  let sub = order.items.reduce((s,it)=>s+it.subtotal,0);
+  return sub + (order.delivery ? DB.catalog.deliveryFee : 0);
+}
+
+function renderOrderPanel(tableId){
+  const table = DB.tables.find(t=>t.id===tableId);
+  const order = DB.ordersByTable[tableId];
+  const products = DB.catalog.products;
+
+  const productBlocks = products.map(p=>{
+    const sel = pickerSel[p.id] || {size:null, toppings:[]};
+    let sizeHtml = '';
+    if(p.hasSize){
+      sizeHtml = `<div class="size-btns">` + Object.keys(p.prices).map(sz=>
+        `<button class="${sel.size===sz?'sel':''}" onclick="pickSize('${p.id}','${sz}')">${sz} · ${money(p.prices[sz])}</button>`
+      ).join('') + `</div>`;
+    }
+    const showToppings = (p.category === 'Yogures');
+    let toppingsHtml = '';
+    if(showToppings){
+      toppingsHtml = `<div style="margin-top:8px;">` + DB.catalog.toppings.map(tp=>{
+        const on = sel.toppings.includes(tp.id);
+        return `<span class="topping-chip ${on?'sel':''}" onclick="toggleTopping('${p.id}','${tp.id}')">${tp.name} +${money(tp.price)}</span>`;
+      }).join('') + `</div>`;
+    }
+    const priceLabel = p.hasSize ? (sel.size ? money(p.prices[sel.size]) : 'elige tamaño') : money(p.price);
+    return `
+    <div class="product-pick">
+      <div class="name-row"><span>${p.name}</span><span style="color:var(--purple-dark);font-weight:700;">${priceLabel}</span></div>
+      ${sizeHtml}
+      ${toppingsHtml}
+      <button class="btn btn-purple btn-sm" style="margin-top:8px;" onclick="addToCart('${p.id}')">➕ Agregar</button>
+    </div>`;
+  }).join('');
+
+  const cartHtml = order.items.length ? order.items.map((it,idx)=>`
+    <div class="cart-line">
+      <div>
+        <div><b>${it.qty}× ${it.name}${it.size?' ('+it.size+')':''}</b></div>
+        ${it.toppings && it.toppings.length ? `<div class="meta">+ ${it.toppings.map(t=>t.name).join(', ')}</div>`:''}
+      </div>
+      <div style="text-align:right;">
+        <div>${money(it.subtotal)}</div>
+        <button class="btn btn-outline btn-sm" style="margin-top:4px;" onclick="removeCartLine(${idx})">Quitar</button>
+      </div>
+    </div>
+  `).join('') : `<div class="empty-state"><span class="emoji">🧺</span>Aún no hay productos en el pedido.</div>`;
+
+  return `
+  <div class="section-head">
+    <div><h2>${table.name}</h2><p class="sub">Toma el pedido y calcula el total automáticamente.</p></div>
+    <button class="btn btn-ghost" onclick="closeTablePanel()">← Volver a mesas</button>
+  </div>
+  <div class="order-panel">
+    <div class="card">
+      <h3 style="margin-bottom:10px;">Productos</h3>
+      ${productBlocks}
+    </div>
+    <div class="card">
+      <h3>Pedido actual</h3>
+      ${cartHtml}
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13.5px;font-weight:600;">
+        <input type="checkbox" ${order.delivery?'checked':''} onchange="toggleDelivery()"> Enviar a domicilio (+${money(DB.catalog.deliveryFee)})
+      </label>
+      <div class="field" style="margin-top:10px;">
+        <label>Notas del pedido</label>
+        <textarea rows="2" oninput="updateNotes(this.value)" placeholder="Ej: sin cereal, para llevar...">${order.notes||''}</textarea>
+      </div>
+      <div class="cart-total"><span>Total</span><span>${money(orderTotal(order))}</span></div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-outline" style="flex:1;" onclick="clearOrder()" ${order.items.length?'':'disabled'}>Vaciar</button>
+        <button class="btn btn-wine" style="flex:2;" onclick="openCheckout()" ${order.items.length?'':'disabled'}>💳 Cobrar</button>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function pickSize(pid, size){
+  if(!pickerSel[pid]) pickerSel[pid] = {size:null, toppings:[]};
+  pickerSel[pid].size = size;
+  rerender();
+}
+function toggleTopping(pid, tid){
+  if(!pickerSel[pid]) pickerSel[pid] = {size:null, toppings:[]};
+  const arr = pickerSel[pid].toppings;
+  const i = arr.indexOf(tid);
+  if(i>=0) arr.splice(i,1); else arr.push(tid);
+  rerender();
+}
+function addToCart(pid){
+  const p = DB.catalog.products.find(x=>x.id===pid);
+  const sel = pickerSel[pid] || {size:null, toppings:[]};
+  if(p.hasSize && !sel.size){ alert('Elige un tamaño primero.'); return; }
+  const unitPrice = p.hasSize ? p.prices[sel.size] : p.price;
+  const stockNow = getStock(pid, sel.size);
+  if(stockNow <= 0){ alert('No hay stock disponible de "'+p.name+(sel.size?' '+sel.size:'')+'". Un administrador debe reabastecer.'); return; }
+  const toppingObjs = (sel.toppings||[]).map(tid=>DB.catalog.toppings.find(t=>t.id===tid)).filter(Boolean);
+  const toppingsTotal = toppingObjs.reduce((s,t)=>s+t.price,0);
+  const order = DB.ordersByTable[activeTableId];
+  order.items.push({
+    productId: pid, name: p.name, size: sel.size, qty: 1,
+    unitPrice, toppings: toppingObjs, subtotal: unitPrice + toppingsTotal
+  });
+  pickerSel[pid] = {size:null, toppings:[]};
+  rerender();
+}
+function removeCartLine(idx){
+  DB.ordersByTable[activeTableId].items.splice(idx,1);
+  rerender();
+}
+function clearOrder(){
+  if(!confirm('¿Vaciar todo el pedido de esta mesa?')) return;
+  DB.ordersByTable[activeTableId] = {items:[], delivery:false, notes:''};
+  rerender();
+}
+function toggleDelivery(){
+  const order = DB.ordersByTable[activeTableId];
+  order.delivery = !order.delivery;
+  rerender();
+}
+function updateNotes(v){
+  DB.ordersByTable[activeTableId].notes = v;
+}
+
+function openCheckout(){
+  if(!isCashOpenToday()){
+    showCashGate();
+    return;
+  }
+  const methods = DB.catalog.paymentMethods;
+  const choice = prompt('Forma de pago:\n' + methods.map((m,i)=>(i+1)+'. '+m).join('\n') + '\n\nEscribe el número:');
+  if(!choice) return;
+  const idx = parseInt(choice,10)-1;
+  const method = methods[idx];
+  if(!method){ alert('Opción no válida.'); return; }
+  finalizeSale(method);
+}
+
+async function finalizeSale(paymentMethod){
+  const table = DB.tables.find(t=>t.id===activeTableId);
+  const order = DB.ordersByTable[activeTableId];
+  const subtotal = order.items.reduce((s,it)=>s+it.subtotal,0);
+  const total = subtotal + (order.delivery ? DB.catalog.deliveryFee : 0);
+  const sale = {
+    id: uid('venta'),
+    date: new Date().toISOString(),
+    tableName: table.name,
+    items: order.items,
+    delivery: order.delivery,
+    deliveryFee: order.delivery ? DB.catalog.deliveryFee : 0,
+    subtotal, total,
+    paymentMethod,
+    seller: CURRENT_USER.name
+  };
+  // descontar stock
+  order.items.forEach(it=>{ setStockDelta(it.productId, it.size, -it.qty); });
+  DB.sales.push(sale);
+  DB.ordersByTable[activeTableId] = {items:[], delivery:false, notes:''};
+  await saveDB('sales');
+  await saveDB('inventory');
+  await saveDB('orders');
+  alert('Venta registrada: ' + money(total) + ' (' + paymentMethod + ')');
+  activeTableId = null;
+  rerender();
+}
+
+/* =======================================================================
+   VISTA: VENTAS (historial)
+   ======================================================================= */
+function viewVentas(){
+  const sales = [...DB.sales].sort((a,b)=> new Date(b.date)-new Date(a.date));
+  const rows = sales.slice(0,150).map(s=>`
+    <tr>
+      <td>${fmtDateTime(s.date)}</td>
+      <td>${s.tableName}</td>
+      <td>${s.items.map(it=>it.qty+'× '+it.name+(it.size?' ('+it.size+')':'')).join(', ')}</td>
+      <td>${s.delivery ? '🚚 Sí' : '—'}</td>
+      <td><span class="badge badge-purple">${s.paymentMethod}</span></td>
+      <td>${s.seller}</td>
+      <td style="text-align:right;font-weight:700;">${money(s.total)}</td>
+    </tr>`).join('');
+  const todayTotal = DB.sales.filter(s=>s.date.slice(0,10)===todayStr()).reduce((sum,s)=>sum+s.total,0);
+  const todayCount = DB.sales.filter(s=>s.date.slice(0,10)===todayStr()).length;
+  return `
+    <div class="section-head"><div><h2>Historial de ventas</h2><p class="sub">Todas las ventas registradas desde las mesas.</p></div></div>
+    <div class="grid cols-3" style="margin-bottom:16px;">
+      <div class="stat-card"><div class="label">Ventas de hoy</div><div class="value">${todayCount}</div></div>
+      <div class="stat-card wine"><div class="label">Total vendido hoy</div><div class="value">${money(todayTotal)}</div></div>
+      <div class="stat-card"><div class="label">Ventas totales registradas</div><div class="value">${DB.sales.length}</div></div>
+    </div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Mesa</th><th>Productos</th><th>Domicilio</th><th>Pago</th><th>Vendedor</th><th style="text-align:right;">Total</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="7"><div class="empty-state">Sin ventas registradas todavía.</div></td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* =======================================================================
+   VISTA: PRODUCTOS (admin)
+   ======================================================================= */
+function viewProductos(){
+  const prodRows = DB.catalog.products.map(p=>{
+    const priceCell = p.hasSize
+      ? Object.entries(p.prices).map(([sz,pr])=>`${sz}: <input type="number" value="${pr}" style="width:80px;" onchange="updeSizePrice('${p.id}','${sz}',this.value)">`).join('<br>')
+      : `<input type="number" value="${p.price}" style="width:90px;" onchange="updateProductPrice('${p.id}',this.value)">`;
+    return `<tr><td><b>${p.name}</b></td><td>${p.category}</td><td>${priceCell}</td></tr>`;
+  }).join('');
+
+  const toppingRows = DB.catalog.toppings.map(t=>`
+    <tr>
+      <td>${t.name}</td>
+      <td><input type="number" value="${t.price}" style="width:90px;" onchange="updateToppingPrice('${t.id}',this.value)"></td>
+      <td><button class="btn btn-outline btn-sm" onclick="removeTopping('${t.id}')">Eliminar</button></td>
+    </tr>`).join('');
+
+  const paymentPills = DB.catalog.paymentMethods.map((m,i)=>
+    `<span class="pill">${m} <button onclick="removePaymentMethod(${i})">✕</button></span>`).join('');
+
+  return `
+    <div class="section-head"><div><h2>Productos y configuración</h2><p class="sub">Precios de tortas, yogures, toppings, domicilio y formas de pago.</p></div></div>
+
+    <div class="card">
+      <h3>Catálogo de productos</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th></tr></thead>
+        <tbody>${prodRows}</tbody>
+      </table></div>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Toppings para yogur</h3>
+        <p class="sub" style="margin-bottom:10px;">Cada adición tiene su propio precio (inicia en $2.000).</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Topping</th><th>Precio</th><th></th></tr></thead>
+          <tbody>${toppingRows}</tbody>
+        </table></div>
+        <div class="tag-input-row" style="margin-top:12px;">
+          <div class="field"><label>Nuevo topping</label><input id="newToppingName" placeholder="Ej: Coco rallado"></div>
+          <div class="field" style="max-width:100px;"><label>Precio</label><input id="newToppingPrice" type="number" value="2000"></div>
+          <button class="btn btn-purple" onclick="addTopping()">Agregar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Domicilio</h3>
+        <div class="field" style="max-width:180px;">
+          <label>Costo del domicilio</label>
+          <input type="number" value="${DB.catalog.deliveryFee}" onchange="updateDeliveryFee(this.value)">
+        </div>
+        <h3 style="margin-top:20px;">Formas de pago</h3>
+        <div class="pill-list" style="margin-bottom:10px;">${paymentPills}</div>
+        <div class="tag-input-row">
+          <div class="field"><label>Nueva forma de pago</label><input id="newPaymentMethod" placeholder="Ej: Nequi"></div>
+          <button class="btn btn-purple" onclick="addPaymentMethod()">Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Respaldo de datos</h3>
+      <p class="sub" style="margin-bottom:12px;">La información vive en este navegador. Descarga un respaldo con frecuencia (por ejemplo al cerrar el día) y guárdalo en un lugar seguro; también sirve para pasar los datos a otro computador o después de borrar el historial del navegador.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-purple" onclick="exportBackup()">⬇️ Descargar respaldo (.json)</button>
+        <button class="btn btn-ghost" onclick="triggerImport()">⬆️ Restaurar desde un respaldo</button>
+      </div>
+    </div>
+  `;
+}
+function updateProductPrice(pid, val){
+  const p = DB.catalog.products.find(x=>x.id===pid); p.price = parseInt(val,10)||0;
+  saveDB('catalog');
+}
+function updeSizePrice(pid, size, val){
+  const p = DB.catalog.products.find(x=>x.id===pid); p.prices[size] = parseInt(val,10)||0;
+  saveDB('catalog');
+}
+function updateToppingPrice(tid, val){
+  const t = DB.catalog.toppings.find(x=>x.id===tid); t.price = parseInt(val,10)||0;
+  saveDB('catalog');
+}
+function addTopping(){
+  const name = document.getElementById('newToppingName').value.trim();
+  const price = parseInt(document.getElementById('newToppingPrice').value,10)||2000;
+  if(!name) return;
+  DB.catalog.toppings.push({id:uid('top'), name, price});
+  saveDB('catalog'); rerender();
+}
+function removeTopping(tid){
+  DB.catalog.toppings = DB.catalog.toppings.filter(t=>t.id!==tid);
+  saveDB('catalog'); rerender();
+}
+function updateDeliveryFee(val){
+  DB.catalog.deliveryFee = parseInt(val,10)||0;
+  saveDB('catalog');
+}
+function addPaymentMethod(){
+  const el = document.getElementById('newPaymentMethod');
+  const v = el.value.trim();
+  if(!v) return;
+  DB.catalog.paymentMethods.push(v);
+  saveDB('catalog'); rerender();
+}
+function removePaymentMethod(i){
+  if(DB.catalog.paymentMethods.length<=1){ alert('Debe quedar al menos una forma de pago.'); return; }
+  DB.catalog.paymentMethods.splice(i,1);
+  saveDB('catalog'); rerender();
+}
+
+/* =======================================================================
+   VISTA: INVENTARIO (admin) — stock terminado + materia prima
+   ======================================================================= */
+function viewInventario(){
+  const stockRows = DB.catalog.products.map(p=>{
+    if(p.hasSize){
+      return Object.keys(p.prices).map(sz=>{
+        const q = getStock(p.id, sz);
+        const low = q<=5;
+        return `<tr class="${low?'lowstock-row':''}"><td>${p.name}</td><td>${sz}</td><td>${q} ${low?'<span class="badge badge-warn">Bajo</span>':''}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="adjustStock('${p.id}','${sz}',1)">+1</button>
+          <button class="btn btn-outline btn-sm" onclick="adjustStock('${p.id}','${sz}',-1)">-1</button>
+          <input type="number" placeholder="cant." style="width:60px;" id="stockinput_${p.id}_${sz.replace(' ','')}">
+          <button class="btn btn-purple btn-sm" onclick="adjustStockCustom('${p.id}','${sz}')">Ajustar</button>
+        </td></tr>`;
+      }).join('');
+    } else {
+      const q = getStock(p.id, null);
+      const low = q<=5;
+      return `<tr class="${low?'lowstock-row':''}"><td>${p.name}</td><td>—</td><td>${q} ${low?'<span class="badge badge-warn">Bajo</span>':''}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="adjustStock('${p.id}',null,1)">+1</button>
+        <button class="btn btn-outline btn-sm" onclick="adjustStock('${p.id}',null,-1)">-1</button>
+        <input type="number" placeholder="cant." style="width:60px;" id="stockinput_${p.id}_none">
+        <button class="btn btn-purple btn-sm" onclick="adjustStockCustom('${p.id}',null)">Ajustar</button>
+      </td></tr>`;
+    }
+  }).join('');
+
+  const rmRows = DB.inventory.rawMaterials.map(rm=>{
+    const low = rm.qty <= rm.minStock;
+    const sup = DB.suppliers.find(s=>s.id===rm.supplierId);
+    return `<tr class="${low?'lowstock-row':''}">
+      <td>${rm.name}</td><td>${rm.unit}</td>
+      <td>${rm.qty} ${low?'<span class="badge badge-warn">Reponer</span>':''}</td>
+      <td>${rm.minStock}</td>
+      <td>${sup?sup.name:'<span style="color:var(--muted);">Sin asignar</span>'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="adjustRawMaterial('${rm.id}',1)">+1</button>
+        <button class="btn btn-outline btn-sm" onclick="adjustRawMaterial('${rm.id}',-1)">-1</button>
+        <button class="btn btn-wine btn-sm" onclick="removeRawMaterial('${rm.id}')">Eliminar</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const supplierOptions = DB.suppliers.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+
+  return `
+    <div class="section-head"><div><h2>Inventario</h2><p class="sub">Stock de productos terminados y materia prima. Solo el administrador puede modificarlo.</p></div></div>
+
+    <div class="card">
+      <h3>Stock de productos terminados</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Producto</th><th>Tamaño</th><th>Stock</th><th>Ajustar</th></tr></thead>
+        <tbody>${stockRows}</tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h3>Materia prima</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Insumo</th><th>Unidad</th><th>Cantidad</th><th>Mínimo</th><th>Proveedor</th><th>Acciones</th></tr></thead>
+        <tbody>${rmRows || '<tr><td colspan="6"><div class="empty-state">Sin insumos registrados.</div></td></tr>'}</tbody>
+      </table></div>
+      <h4 style="margin-top:16px;">Registrar nuevo insumo</h4>
+      <div class="tag-input-row">
+        <div class="field"><label>Nombre</label><input id="rmName" placeholder="Ej: Fresas"></div>
+        <div class="field" style="max-width:110px;"><label>Unidad</label><input id="rmUnit" placeholder="Kg / Litros"></div>
+        <div class="field" style="max-width:100px;"><label>Cantidad</label><input id="rmQty" type="number" value="0"></div>
+        <div class="field" style="max-width:100px;"><label>Mínimo</label><input id="rmMin" type="number" value="1"></div>
+        <div class="field" style="max-width:170px;"><label>Proveedor</label><select id="rmSupplier"><option value="">Sin asignar</option>${supplierOptions}</select></div>
+        <button class="btn btn-purple" onclick="addRawMaterial()">Agregar insumo</button>
+      </div>
+    </div>
+  `;
+}
+function adjustStock(pid, size, delta){
+  setStockDelta(pid, size, delta);
+  saveDB('inventory'); rerender();
+}
+function adjustStockCustom(pid, size){
+  const key = 'stockinput_'+pid+'_'+(size?size.replace(' ',''):'none');
+  const v = parseInt(document.getElementById(key).value,10);
+  if(isNaN(v)) return;
+  setStockDelta(pid, size, v);
+  saveDB('inventory'); rerender();
+}
+function addRawMaterial(){
+  const name = document.getElementById('rmName').value.trim();
+  const unit = document.getElementById('rmUnit').value.trim() || 'Unidades';
+  const qty = parseFloat(document.getElementById('rmQty').value)||0;
+  const minStock = parseFloat(document.getElementById('rmMin').value)||0;
+  const supplierId = document.getElementById('rmSupplier').value || null;
+  if(!name) return;
+  DB.inventory.rawMaterials.push({id:uid('rm'), name, unit, qty, minStock, supplierId});
+  saveDB('inventory'); rerender();
+}
+function adjustRawMaterial(id, delta){
+  const rm = DB.inventory.rawMaterials.find(x=>x.id===id);
+  rm.qty = Math.max(0, rm.qty + delta);
+  saveDB('inventory'); rerender();
+}
+function removeRawMaterial(id){
+  if(!confirm('¿Eliminar este insumo del inventario?')) return;
+  DB.inventory.rawMaterials = DB.inventory.rawMaterials.filter(x=>x.id!==id);
+  saveDB('inventory'); rerender();
+}
+
+/* =======================================================================
+   VISTA: PROVEEDORES (admin)
+   ======================================================================= */
+function viewProveedores(){
+  const rows = DB.suppliers.map(s=>`
+    <tr>
+      <td>${s.name}</td><td>${s.phone||'—'}</td><td>${s.provides||'—'}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="removeSupplier('${s.id}')">Eliminar</button></td>
+    </tr>`).join('');
+  return `
+    <div class="section-head"><div><h2>Proveedores</h2><p class="sub">Contactos que abastecen la materia prima del negocio.</p></div></div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Nombre</th><th>Teléfono</th><th>Qué suministra</th><th></th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4"><div class="empty-state">Aún no hay proveedores registrados.</div></td></tr>'}</tbody>
+      </table></div>
+      <h4 style="margin-top:16px;">Nuevo proveedor</h4>
+      <div class="tag-input-row">
+        <div class="field"><label>Nombre</label><input id="supName" placeholder="Ej: Lácteos del Cauca"></div>
+        <div class="field"><label>Teléfono</label><input id="supPhone" placeholder="Ej: 300 000 0000"></div>
+        <div class="field"><label>Qué suministra</label><input id="supProvides" placeholder="Ej: Leche, huevos"></div>
+        <button class="btn btn-purple" onclick="addSupplier()">Agregar</button>
+      </div>
+    </div>
+  `;
+}
+function addSupplier(){
+  const name = document.getElementById('supName').value.trim();
+  const phone = document.getElementById('supPhone').value.trim();
+  const provides = document.getElementById('supProvides').value.trim();
+  if(!name) return;
+  DB.suppliers.push({id:uid('sup'), name, phone, provides});
+  saveDB('suppliers'); rerender();
+}
+function removeSupplier(id){
+  if(!confirm('¿Eliminar este proveedor?')) return;
+  DB.suppliers = DB.suppliers.filter(s=>s.id!==id);
+  DB.inventory.rawMaterials.forEach(rm=>{ if(rm.supplierId===id) rm.supplierId=null; });
+  saveDB('suppliers'); saveDB('inventory'); rerender();
+}
+
+/* =======================================================================
+   VISTA: INGRESOS Y EGRESOS (admin)
+   ======================================================================= */
+function viewFinanzas(){
+  const rows = [...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(t=>`
+    <tr>
+      <td>${fmtDateTime(t.date)}</td>
+      <td><span class="badge ${t.type==='ingreso'?'badge-ok':'badge-wine'}">${t.type==='ingreso'?'Ingreso':'Egreso'}</span></td>
+      <td>${t.concept}</td>
+      <td style="text-align:right;font-weight:700;">${money(t.amount)}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="removeTransaction('${t.id}')">Eliminar</button></td>
+    </tr>`).join('');
+  const totalIn = DB.transactions.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.amount,0);
+  const totalOut = DB.transactions.filter(t=>t.type==='egreso').reduce((s,t)=>s+t.amount,0);
+  return `
+    <div class="section-head"><div><h2>Ingresos y egresos</h2><p class="sub">Registra dinero que entra o sale del negocio, aparte de las ventas.</p></div></div>
+    <div class="grid cols-2" style="margin-bottom:16px;">
+      <div class="stat-card"><div class="label">Total ingresos extra</div><div class="value">${money(totalIn)}</div></div>
+      <div class="stat-card wine"><div class="label">Total egresos</div><div class="value">${money(totalOut)}</div></div>
+    </div>
+    <div class="card">
+      <h4>Registrar movimiento</h4>
+      <div class="tag-input-row">
+        <div class="field" style="max-width:140px;"><label>Tipo</label>
+          <select id="txType"><option value="ingreso">Ingreso</option><option value="egreso">Egreso</option></select>
+        </div>
+        <div class="field"><label>Concepto</label><input id="txConcept" placeholder="Ej: Pago de arriendo"></div>
+        <div class="field" style="max-width:130px;"><label>Valor</label><input id="txAmount" type="number" placeholder="0"></div>
+        <button class="btn btn-purple" onclick="addTransaction()">Registrar</button>
+      </div>
+    </div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th style="text-align:right;">Valor</th><th></th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="5"><div class="empty-state">Sin movimientos registrados.</div></td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+}
+function addTransaction(){
+  const type = document.getElementById('txType').value;
+  const concept = document.getElementById('txConcept').value.trim();
+  const amount = parseFloat(document.getElementById('txAmount').value);
+  if(!concept || !amount){ alert('Completa concepto y valor.'); return; }
+  DB.transactions.push({id:uid('tx'), date:new Date().toISOString(), type, concept, amount, user:CURRENT_USER.name});
+  saveDB('transactions'); rerender();
+}
+function removeTransaction(id){
+  DB.transactions = DB.transactions.filter(t=>t.id!==id);
+  saveDB('transactions'); rerender();
+}
+
+/* =======================================================================
+   VISTA: CIERRE DE CAJA (admin)
+   ======================================================================= */
+function viewCaja(){
+  const today = todayStr();
+  const isOpen = isCashOpenToday();
+  const salesToday = DB.sales.filter(s=>s.date.slice(0,10)===today);
+  const txToday = DB.transactions.filter(t=>t.date.slice(0,10)===today);
+  const byMethod = {};
+  DB.catalog.paymentMethods.forEach(m=>byMethod[m]=0);
+  salesToday.forEach(s=>{ byMethod[s.paymentMethod] = (byMethod[s.paymentMethod]||0) + s.total; });
+  const totalSales = salesToday.reduce((s,x)=>s+x.total,0);
+  const income = txToday.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.amount,0);
+  const expenses = txToday.filter(t=>t.type==='egreso').reduce((s,t)=>s+t.amount,0);
+  const cashSales = byMethod['Efectivo'] || 0;
+  const openingBalance = isOpen ? DB.cash.currentOpen.openingBalance : 0;
+  const expectedCash = openingBalance + cashSales + income - expenses;
+  const alreadyClosed = DB.cash.closings.find(c=>c.date===today);
+
+  if(!isOpen){
+    return `
+      <div class="section-head"><div><h2>Cierre de caja</h2><p class="sub">Resumen del día y cierre diario del efectivo.</p></div></div>
+      <div class="card" style="text-align:center;padding:36px 20px;">
+        <span style="font-size:34px;">🔒</span>
+        <h3 style="margin-top:10px;">La caja de hoy aún no ha sido abierta</h3>
+        <p class="sub" style="margin-bottom:16px;">Abre la caja con el monto inicial en efectivo para empezar a registrar ventas hoy.</p>
+        <button class="btn btn-purple" onclick="showCashGate()">💰 Abrir caja de hoy</button>
+      </div>
+      ${renderClosingHistory()}
+    `;
+  }
+
+  const methodRows = Object.entries(byMethod).map(([m,v])=>`<tr><td>${m}</td><td style="text-align:right;">${money(v)}</td></tr>`).join('');
+
+  return `
+    <div class="section-head"><div><h2>Cierre de caja</h2><p class="sub">Caja abierta hoy por ${DB.cash.currentOpen.openedBy} a las ${new Date(DB.cash.currentOpen.openedAt).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})} con ${money(openingBalance)} de base.</p></div></div>
+    <div class="grid cols-3" style="margin-bottom:16px;">
+      <div class="stat-card"><div class="label">Ventas de hoy</div><div class="value">${money(totalSales)}</div></div>
+      <div class="stat-card"><div class="label">Ingresos extra</div><div class="value">${money(income)}</div></div>
+      <div class="stat-card wine"><div class="label">Egresos</div><div class="value">${money(expenses)}</div></div>
+    </div>
+    <div class="card">
+      <h3>Ventas por forma de pago (hoy)</h3>
+      <div class="table-wrap"><table><tbody>${methodRows}</tbody></table></div>
+      <div class="cart-total" style="margin-top:10px;"><span>Base inicial + efectivo esperado</span><span>${money(expectedCash)}</span></div>
+      ${alreadyClosed
+        ? `<div class="badge badge-ok" style="margin-top:14px;display:inline-block;">Caja ya cerrada hoy a las ${new Date(alreadyClosed.closedAt).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</div>`
+        : `<button class="btn btn-wine" style="margin-top:14px;" onclick="closeCash()">🔒 Cerrar caja de hoy</button>`}
+    </div>
+    ${renderClosingHistory()}
+  `;
+}
+function renderClosingHistory(){
+  const closingHistory = [...DB.cash.closings].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(c=>`
+    <tr><td>${fmtDate(c.date)}</td><td style="text-align:right;">${money(c.openingBalance||0)}</td><td style="text-align:right;">${money(c.totalSales)}</td><td style="text-align:right;">${money(c.income)}</td><td style="text-align:right;">${money(c.expenses)}</td><td style="text-align:right;font-weight:700;">${money(c.expectedCash)}</td></tr>
+  `).join('');
+  return `
+    <div class="card table-wrap">
+      <h3>Historial de cierres</h3>
+      <table>
+        <thead><tr><th>Fecha</th><th style="text-align:right;">Base inicial</th><th style="text-align:right;">Ventas</th><th style="text-align:right;">Ingresos</th><th style="text-align:right;">Egresos</th><th style="text-align:right;">Efectivo esperado</th></tr></thead>
+        <tbody>${closingHistory || '<tr><td colspan="6"><div class="empty-state">Sin cierres registrados.</div></td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+}
+function closeCash(){
+  const today = todayStr();
+  if(!isCashOpenToday()){ alert('La caja de hoy no está abierta.'); return; }
+  if(DB.cash.closings.find(c=>c.date===today)){ alert('La caja de hoy ya fue cerrada.'); return; }
+  const openingBalance = DB.cash.currentOpen.openingBalance;
+  const salesToday = DB.sales.filter(s=>s.date.slice(0,10)===today);
+  const txToday = DB.transactions.filter(t=>t.date.slice(0,10)===today);
+  const byMethod = {};
+  salesToday.forEach(s=>{ byMethod[s.paymentMethod] = (byMethod[s.paymentMethod]||0) + s.total; });
+  const totalSales = salesToday.reduce((s,x)=>s+x.total,0);
+  const income = txToday.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.amount,0);
+  const expenses = txToday.filter(t=>t.type==='egreso').reduce((s,t)=>s+t.amount,0);
+  const cashSales = byMethod['Efectivo'] || 0;
+  const expectedCash = openingBalance + cashSales + income - expenses;
+  DB.cash.closings.push({date:today, openingBalance, byMethod, totalSales, income, expenses, expectedCash, closedAt:new Date().toISOString(), closedBy:CURRENT_USER.name});
+  DB.cash.currentOpen = null;
+  saveDB('cash'); rerender();
+}
+
+/* =======================================================================
+   VISTA: REPORTES (admin)
+   ======================================================================= */
+function viewReportes(){
+  const byDay = {};
+  const byMonth = {};
+  const productCount = {};
+  DB.sales.forEach(s=>{
+    const day = s.date.slice(0,10);
+    const month = s.date.slice(0,7);
+    byDay[day] = (byDay[day]||0) + s.total;
+    byMonth[month] = (byMonth[month]||0) + s.total;
+    s.items.forEach(it=>{
+      const key = it.name + (it.size?' ('+it.size+')':'');
+      productCount[key] = (productCount[key]||0) + it.qty;
+    });
+  });
+  const dayRows = Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,20)
+    .map(([d,v])=>`<tr><td>${fmtDate(d)}</td><td style="text-align:right;">${money(v)}</td></tr>`).join('');
+  const monthRows = Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0]))
+    .map(([m,v])=>`<tr><td>${m}</td><td style="text-align:right;">${money(v)}</td></tr>`).join('');
+  const topProducts = Object.entries(productCount).sort((a,b)=>b[1]-a[1]).slice(0,10)
+    .map(([name,qty],i)=>`<tr><td>${i+1}</td><td>${name}</td><td style="text-align:right;">${qty} und.</td></tr>`).join('');
+
+  const maxDay = Math.max(1, ...Object.values(byDay));
+  const barChart = Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14).map(([d,v])=>`
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:24px;">
+      <div style="width:100%;background:linear-gradient(180deg,var(--purple-light),var(--purple));border-radius:6px 6px 0 0;height:${Math.max(4,(v/maxDay)*110)}px;"></div>
+      <div style="font-size:9px;color:var(--muted);writing-mode:vertical-rl;">${d.slice(5)}</div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="section-head"><div><h2>Reportes</h2><p class="sub">Ventas por día, por mes y productos más vendidos.</p></div></div>
+    <div class="card">
+      <h3>Ventas — últimos 14 días</h3>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:130px;padding-top:10px;">${barChart || '<div class="empty-state">Sin datos suficientes.</div>'}</div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card table-wrap">
+        <h3>Ventas por día</h3>
+        <table><thead><tr><th>Día</th><th style="text-align:right;">Total</th></tr></thead>
+        <tbody>${dayRows || '<tr><td colspan="2"><div class="empty-state">Sin ventas.</div></td></tr>'}</tbody></table>
+      </div>
+      <div class="card table-wrap">
+        <h3>Ventas por mes</h3>
+        <table><thead><tr><th>Mes</th><th style="text-align:right;">Total</th></tr></thead>
+        <tbody>${monthRows || '<tr><td colspan="2"><div class="empty-state">Sin ventas.</div></td></tr>'}</tbody></table>
+      </div>
+    </div>
+    <div class="card table-wrap">
+      <h3>Productos más vendidos</h3>
+      <table><thead><tr><th>#</th><th>Producto</th><th style="text-align:right;">Cantidad</th></tr></thead>
+      <tbody>${topProducts || '<tr><td colspan="3"><div class="empty-state">Sin ventas todavía.</div></td></tr>'}</tbody></table>
+    </div>
+  `;
+}
+
+/* =======================================================================
+   INICIO
+   ======================================================================= */
+(async function init(){
+  await loadDB();
+  document.getElementById('loginUser').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  if('serviceWorker' in navigator){
+    try{ await navigator.serviceWorker.register('sw.js'); }catch(e){ /* si falla, la app sigue funcionando igual, solo sin modo offline/instalable */ }
+  }
+})();
+
+/* =======================================================================
+   RESPALDO (EXPORTAR / IMPORTAR) — porque los datos viven en este navegador
+   ======================================================================= */
+function exportBackup(){
+  const backup = { exportedAt: new Date().toISOString(), DB };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'respaldo-puro-antojo-' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function triggerImport(){
+  document.getElementById('importFileInput').click();
+}
+function importBackup(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      const data = parsed.DB || parsed;
+      if(!data.catalog || !data.tables){ throw new Error('Formato no reconocido'); }
+      if(!confirm('Esto reemplazará todos los datos actuales de la app por los del archivo de respaldo. ¿Continuar?')) return;
+      DB = data;
+      await saveDB();
+      alert('Respaldo importado correctamente.');
+      rerender();
+    }catch(err){
+      alert('No se pudo leer el archivo de respaldo. Verifica que sea un archivo exportado desde esta misma app.');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+</script>
+</body>
+</html>
